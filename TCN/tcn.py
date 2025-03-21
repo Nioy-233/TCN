@@ -4,6 +4,15 @@ from torch.nn.utils import weight_norm
 
 
 class Chomp1d(nn.Module):
+    """  
+    移除输入张量的最后部分，确保张量在时间维度上的长度适合后续计算。  
+
+    参数:  
+    - chomp_size: 需要移除的时间步数，影响输出的时间维度。  
+
+    输入是一个三维张量 [batch_size, channels, length]。  
+    最终输出是一个三维张量 [batch_size, channels, length - chomp_size]。  
+    """  
     def __init__(self, chomp_size):
         super(Chomp1d, self).__init__()
         self.chomp_size = chomp_size
@@ -13,6 +22,21 @@ class Chomp1d(nn.Module):
 
 
 class TemporalBlock(nn.Module):
+    """  
+    构建一个基础的时间卷积块，包括卷积、激活、丢弃和残差连接。  
+
+    参数:  
+    - n_inputs: 输入通道数。  
+    - n_outputs: 输出通道数。  
+    - kernel_size: 卷积核大小。  
+    - stride: 卷积步长。  
+    - dilation: 卷积膨胀系数。  
+    - padding: 填充大小。  
+    - dropout: 丢弃率，默认值为0.2。  
+
+    输入是一个三维张量 [batch_size, n_inputs, length]。  
+    最终输出是一个三维张量 [batch_size, n_outputs, length]。  
+    """
     def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
         super(TemporalBlock, self).__init__()
         self.conv1 = weight_norm(nn.Conv1d(n_inputs, n_outputs, kernel_size,
@@ -46,6 +70,18 @@ class TemporalBlock(nn.Module):
 
 
 class TemporalConvNet(nn.Module):
+    """  
+    构建一个由多个 TemporalBlock 组成的时间卷积网络。  
+
+    参数:  
+    - num_inputs: 输入通道数。  
+    - num_channels: 每个层的输出通道数列表。  
+    - kernel_size: 卷积核大小，默认值为2。  
+    - dropout: 丢弃率，默认值为0.2。  
+
+    输入是一个三维张量 [batch_size, num_inputs, length]。  
+    最终输出是一个三维张量 [batch_size, num_channels[-1], length]。  
+    """  
     def __init__(self, num_inputs, num_channels, kernel_size=2, dropout=0.2):
         super(TemporalConvNet, self).__init__()
         layers = []
