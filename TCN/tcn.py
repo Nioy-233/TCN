@@ -1,3 +1,43 @@
+"""  
+用法示例 Example Usage  
+--------------------------  
+
+以下示例展示如何使用TemporalConvNet对一组(batch, 特征数, 序列长度)格式的一维序列数据进行处理。  
+
+>>> import torch  
+>>> # 假设输入为 batch_size=4, 特征数=8, 序列长度=30  
+>>> x = torch.randn(4, 8, 30)  
+
+>>> # 初始化TCN，2层，通道数分别为16和32，卷积核大小为3  
+>>> model = TemporalConvNet(num_inputs=8, num_channels=[16, 32], kernel_size=3, dropout=0.1)  
+
+>>> # 模型前向传播  
+>>> y = model(x)  # 输出形状为 [4, 32, 30]  
+
+>>> print(y.shape)  
+torch.Size([4, 32, 30])  
+
+# 如果你的数据输入格式是 [batch_size, 时间步, 特征数]，记得先转换  
+>>> x_raw = torch.randn(4, 30, 8)  
+>>> x = x_raw.permute(0, 2, 1)  # 转为 [4, 8, 30]  
+>>> y = model(x)  
+
+# 可以自定义输出层（如分类或回归）  
+>>> import torch.nn as nn  
+>>> class MyTCNClassifier(nn.Module):  
+...     def __init__(self, input_dim, tcn_channels, num_classes):  
+...         super().__init__()  
+...         self.tcn = TemporalConvNet(input_dim, tcn_channels)  
+...         self.fc = nn.Linear(tcn_channels[-1], num_classes)  
+...     def forward(self, x):  
+...         out = self.tcn(x)      # [batch, channels, seq_len]  
+...         out = out[:, :, -1]   # 取最后时刻  
+...         return self.fc(out)  
+>>> clf = MyTCNClassifier(8, [16,32], 10)  
+>>> y_pred = clf(x)     # y_pred.shape == [4, 10]  
+
+"""  
+
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
